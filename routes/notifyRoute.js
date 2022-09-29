@@ -107,6 +107,8 @@ router.post('/addSub', checkJWT, async (req, res) => {
 router.get('/testNotify', checkJWT, async (req, res) => {
     const foundUser = await User.findById(req.user.id);
     if(!foundUser) return res.status(401).json({ message: 'User not found.' });
+    if(!foundUser.notifyEnabled) return res.status(404).json({ message: 'Notification is not enabled.' });
+    if(foundUser.notifyProducts.length === 0) return res.status(404).json({ message: 'No products are in the notify list.' });
 
     foundUser.notifyProducts.forEach(product => {
         notificate.sendNotifications(foundUser, product, product.price);
