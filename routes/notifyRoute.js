@@ -109,6 +109,7 @@ router.get('/testNotify', checkJWT, async (req, res) => {
     if(!foundUser) return res.status(401).json({ message: 'User not found.' });
     if(!foundUser.notifyEnabled) return res.status(404).json({ message: 'Notification is not enabled.' });
     if(foundUser.notifyProducts.length === 0) return res.status(404).json({ message: 'No products are in the notify list.' });
+    if(foundUser.subs.length === 0) return res.status(404).json({ message: 'No subscriptions were found.' });
 
     foundUser.notifyProducts.forEach(product => {
         notificate.sendNotifications(foundUser, product, product.price);
