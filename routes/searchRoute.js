@@ -9,9 +9,13 @@ const SearchInfo = require('../model/SearchInfo');
 router.get('/:product', async (req, res) => {
     if(!req.params.product) return res.status(404).json({ message: 'No product name found.' });
 
-    const ebayProducts = await searchProduct('ebay', req.params.product, 0, 10); 
-    const shpockProducts = await searchProduct('shpock', req.params.product, 0, 10); 
-    let searchResults = ebayProducts.hits.hits.concat(shpockProducts.hits.hits);
+    let searchResults;
+    try {
+        const ebayProducts = await searchProduct('ebay', req.params.product, 0, 10); 
+        const shpockProducts = await searchProduct('shpock', req.params.product, 0, 10); 
+        searchResults = ebayProducts.hits.hits.concat(shpockProducts.hits.hits);
+    } catch(err) {console.log(err)}
+
     if(searchResults.length > 9) {
         searchResults = mapProducts(searchResults);
         return res.json(searchResults);
