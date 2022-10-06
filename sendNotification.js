@@ -23,7 +23,7 @@ async function sendNotifications(user, product, price) {
             },
             body: product.productName,
             icon: product.img,
-            title: "Price has been changed!  nNew price: € "+price,
+            title: "Price has been changed! New price: € "+price,
             vibrate: [100, 50, 100],
             actions: [
                 {

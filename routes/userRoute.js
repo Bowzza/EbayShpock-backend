@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
     const {error} = loginSchema.validate(req.body);
     if(error) return res.status(401).json({ message: error.details[0].message });
     const language = req.header('Accept-Language');
-
+    console.log()
     const email = req.body.email;
     const password = req.body.password;
 
@@ -90,7 +90,8 @@ router.post('/login', async (req, res) => {
     }
 
     const validPassword = await bcrypt.compare(password, foundUser.password);
-    if(!validPassword) return res.status(401).json({ message: 'Email or password is wrong!' });
+    if(!validPassword && language === 'en-US') return res.status(401).json({ message: 'Email or password is wrong!' });
+    if(!validPassword && language === 'de-AT') return res.status(401).json({ message: 'Email Adresse oder Passwort ist falsch!' });
 
     foundUser.last_login = Date.now();
     try {
