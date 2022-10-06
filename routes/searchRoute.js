@@ -141,23 +141,30 @@ async function searchProduct(index, searchTerm, from, size) {
     //     query: {
     //         dis_max: {
     //             queries: [
-    //                 { match: {'name': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } },
-    //                 { match_phrase_prefix: { 'name': {query: searchTerm } } },
-    //                 { term: { 'name': searchTerm } },
-    //                 { wildcard: { 'name': { value: '*'+searchTerm+'*'} } }
+    //                 { match: {'productName': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } },
+    //                 { match_phrase_prefix: { 'productName': {query: searchTerm } } },
+    //                 { term: { 'productName': searchTerm } },
+    //                 { wildcard: { 'productName': { value: '*'+searchTerm+'*'} } }
     //             ]
     //         }
     //     }
     // });
     let result;
     try {
-        result = await client.search({
+        result = await elasticsearch.search({
             index,
             from,
             size,
             query: {
-                match: {
-                    'productName': searchTerm
+                bool: {
+                    should: [
+                        {
+                            match_phrase_prefix: {'name': { query: searchTerm, slop: 2 } } 
+                        },
+                        {
+                            match: {'name': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } 
+                        }
+                    ]
                 }
             }
         });
@@ -167,11 +174,7 @@ async function searchProduct(index, searchTerm, from, size) {
 }
 
 function mapProducts(arr) {
-    const products = [];
-    arr.map((product) => {
-        product._source ? products.push(product._source) : products.push(product);
-    });
-    return products;
+    return arr.map((product) => product._source ?? product);
 }
 
 

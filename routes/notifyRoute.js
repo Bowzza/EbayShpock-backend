@@ -18,6 +18,9 @@ router.post('/enableNotify', checkJWT, async (req, res) => {
     if(!findUser) return res.status(404).json({ message: 'User not found.' });
 
     findUser.notifyEnabled = !findUser.notifyEnabled;
+    if(!findUser.notifyEnabled) {
+        findUser.subs = [];
+    }
     try {
         await findUser.save();
     } catch (err) { console.log(err.message); }
@@ -83,7 +86,7 @@ router.delete('/deleteFromNotifyProduct/:productId', checkJWT, async (req, res) 
 
 router.post('/addSub', checkJWT, async (req, res) => {
     const sub = req.body.sub;
-    if(!sub) return res.status(404).json({ message: 'Product not found.' });
+    if(!sub) return res.status(404).json({ message: 'Sub not found.' });
 
     const findUser = await User.findById(req.user.id);
     if(!findUser) return res.status(404).json({ message: 'User not found.' });
