@@ -14,7 +14,6 @@ router.get('/:product', async (req, res) => {
         const shpockProducts = await searchProduct('shpock', req.params.product, 0, 10); 
         searchResults = ebayProducts.hits.hits.concat(shpockProducts.hits.hits);
         if(searchResults.length > 9) {
-            console.log('test');
             searchResults = mapProducts(searchResults);
             return res.json(searchResults);
         }
@@ -95,10 +94,9 @@ router.post('/:product', async (req, res) => {
 
 
 async function saveProductsToElastic(firstArr, secondArr) {
-    console.log('firstArr: '+firstArr);
-    console.log('secondArr: '+secondArr);
     try {
         for(const product of firstArr) {
+            console.log(product);
             await client.index({
                 index: 'ebay',
                 body: {
@@ -164,10 +162,10 @@ async function searchProduct(index, searchTerm, from, size) {
                 bool: {
                     should: [
                         {
-                            match_phrase_prefix: {'name': { query: searchTerm, slop: 2 } } 
+                            match_phrase_prefix: {'productName': { query: searchTerm, slop: 2 } } 
                         },
                         {
-                            match: {'name': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } 
+                            match: {'productName': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } 
                         }
                     ]
                 }
