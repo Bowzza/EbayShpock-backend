@@ -8,18 +8,17 @@ const SearchInfo = require('../model/SearchInfo');
 
 router.get('/:product', async (req, res) => {
     if(!req.params.product) return res.status(404).json({ message: 'No product name found.' });
-
     let searchResults;
     try {
         const ebayProducts = await searchProduct('ebay', req.params.product, 0, 10); 
         const shpockProducts = await searchProduct('shpock', req.params.product, 0, 10); 
         searchResults = ebayProducts.hits.hits.concat(shpockProducts.hits.hits);
+        if(searchResults.length > 9) {
+            console.log('test');
+            searchResults = mapProducts(searchResults);
+            return res.json(searchResults);
+        }
     } catch(err) {console.log(err)}
-
-    if(searchResults.length > 9) {
-        searchResults = mapProducts(searchResults);
-        return res.json(searchResults);
-    }
 
     const products = await Promise.all([
         ebay.productsEbay(req.params.product, 0),
@@ -96,6 +95,8 @@ router.post('/:product', async (req, res) => {
 
 
 async function saveProductsToElastic(firstArr, secondArr) {
+    console.log('firstArr: '+firstArr);
+    console.log('secondArr: '+secondArr);
     try {
         for(const product of firstArr) {
             await client.index({
@@ -155,7 +156,7 @@ async function searchProduct(index, searchTerm, from, size) {
     // });
     let result;
     try {
-        result = await elasticsearch.search({
+        result = await client.search({
             index,
             from,
             size,
@@ -178,6 +179,11 @@ async function searchProduct(index, searchTerm, from, size) {
 }
 
 function mapProducts(arr) {
+    // const products = [];
+    // arr.map(product => {
+    //     product._source ? products.push(product._soource) : products.push(product);
+    // });
+    // return products;
     return arr.map((product) => product._source ?? product);
 }
 
