@@ -162,10 +162,7 @@ async function searchProduct(index, searchTerm, from, size) {
                 bool: {
                     should: [
                         {
-                            match_phrase_prefix: {'productName': { query: searchTerm, slop: 2 } } 
-                        },
-                        {
-                            match: {'productName': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } 
+                            match_phrase: {'productName': { query: searchTerm, slop: 2 } } 
                         }
                     ]
                 }
