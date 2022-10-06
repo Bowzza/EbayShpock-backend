@@ -82,7 +82,6 @@ router.post('/:product', async (req, res) => {
         } catch(err) { console.log(err.message); }
     }
 
-    saveProductsToElastic(products, null);
 
     const productsToAdd = 10 - searchResults.length;
     products.forEach((product, index) => {
@@ -91,11 +90,13 @@ router.post('/:product', async (req, res) => {
     
     searchResults = mapProducts(searchResults);
     res.json(searchResults);
+
+    saveProductsToElastic(products, undefined);
+
 });
 
 
 async function saveProductsToElastic(firstArr, secondArr) {
-    console.log(firstArr, secondArr);
     try {
         for(const product of firstArr) {
             await client.index({
@@ -114,6 +115,7 @@ async function saveProductsToElastic(firstArr, secondArr) {
         }
         
         if(!secondArr) {
+            console.log('secondArr not defined');
             await client.indices.refresh();
             return;
         }
@@ -132,27 +134,13 @@ async function saveProductsToElastic(firstArr, secondArr) {
                 }
             });
         }
+        console.log('secondArr is defined');
         await client.indices.refresh();
     } catch(err) { console.log(err); }
 }
 
 
 async function searchProduct(index, searchTerm, from, size) {
-    // const result = await elasticsearch.search({
-    //     index: index,
-    //     from,
-    //     size,
-    //     query: {
-    //         dis_max: {
-    //             queries: [
-    //                 { match: {'productName': { query: searchTerm, minimum_should_match: 1, fuzziness: 2 } } },
-    //                 { match_phrase_prefix: { 'productName': {query: searchTerm } } },
-    //                 { term: { 'productName': searchTerm } },
-    //                 { wildcard: { 'productName': { value: '*'+searchTerm+'*'} } }
-    //             ]
-    //         }
-    //     }
-    // });
     let result;
     try {
         result = await client.search({
@@ -160,12 +148,12 @@ async function searchProduct(index, searchTerm, from, size) {
             from,
             size,
             query: {
-                bool: {
-                    should: [
-                        {
-                            match_phrase: {'productName': { query: searchTerm, slop: 2 } } 
-                        }
-                    ]
+                match: {
+                    "productName": {
+                        query: searchTerm,
+                        operator: "and",
+                        fuzziness: "auto"
+                    }
                 }
             }
         });
@@ -175,11 +163,6 @@ async function searchProduct(index, searchTerm, from, size) {
 }
 
 function mapProducts(arr) {
-    // const products = [];
-    // arr.map(product => {
-    //     product._source ? products.push(product._soource) : products.push(product);
-    // });
-    // return products;
     return arr.map((product) => product._source ?? product);
 }
 
