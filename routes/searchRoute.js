@@ -69,10 +69,11 @@ router.post('/:product', async (req, res) => {
             await searchInfoEntry.save();
         } catch(err) { console.log(err.message); }
     }
-    let products = await Promise.all(
-        ebay.productsEbay(req.params.product, page),
-        shpock.productsShpock(req.params.product, )
-    ); 
+    let products;
+    try {
+        products = await ebay.productsEbay(req.params.product, page);
+    } catch (err) {console.log(err);}
+    
 
     if(searchInfo) {
         searchInfo.ebayPage++;
@@ -94,9 +95,9 @@ router.post('/:product', async (req, res) => {
 
 
 async function saveProductsToElastic(firstArr, secondArr) {
+    console.log(firstArr, secondArr);
     try {
         for(const product of firstArr) {
-            console.log(product);
             await client.index({
                 index: 'ebay',
                 body: {
