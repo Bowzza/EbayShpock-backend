@@ -51,7 +51,14 @@ router.post('/:product', async (req, res) => {
 
     const ebayProducts = await searchProduct('ebay', req.params.product, ebayNumberOfProducts, 10); 
     const shpockProducts = await searchProduct('shpock', req.params.product, shpockNumberOfProducts, 10); 
-    let searchResults = ebayProducts.hits.hits.concat(shpockProducts.hits.hits);
+
+    let searchResults;
+    if(ebayProducts && shpockProducts) {
+        searchResults = ebayProducts.hits.hits.concat(shpockProducts.hits.hits);
+    } else {
+        searchResults = ebayProducts.hits.hits;
+    }
+
     if(searchResults.length >= 10) {
         searchResults = mapProducts(searchResults);
         return res.json(searchResults);
@@ -97,44 +104,30 @@ router.post('/:product', async (req, res) => {
 
 
 async function saveProductsToElastic(firstArr, secondArr) {
+    if(firstArr) saveToElastic(firstArr, 'ebay');
+    if(secondArr) saveToElastic(secondArr, 'shpock');
+}
+
+async function saveToElastic(products, index) {
     try {
-        for(const product of firstArr) {
-            await client.index({
-                index: 'ebay',
-                body: {
-                    articleNumber: product.articleNumber,
-                    productName: product.productName,
-                    description: product.description,
-                    price: product.price,
-                    currency: product.currency,
-                    link: product.link,
-                    img: product.img,
-                    shop: product.shop
-                }
-            });
+        for(const product of products) {
+            const stored = await checkIfProductIsStored(product.articleNumber, index)
+            if(!stored) {
+                await client.index({
+                    index,
+                    body: {
+                        articleNumber: product.articleNumber,
+                        productName: product.productName,
+                        description: product.description,
+                        price: product.price,
+                        currency: product.currency,
+                        link: product.link,
+                        img: product.img,
+                        shop: product.shop
+                    }
+                });
+            }
         }
-        
-        if(!secondArr) {
-            console.log('secondArr not defined');
-            await client.indices.refresh();
-            return;
-        }
-        for(const product of secondArr) {
-            await client.index({
-                index: 'shpock',
-                body: {
-                    articleNumber: product.articleNumber,
-                    productName: product.productName,
-                    description: product.description,
-                    price: product.price,
-                    currency: product.currency,
-                    link: product.link,
-                    img: product.img,
-                    shop: product.shop
-                }
-            });
-        }
-        console.log('secondArr is defined');
         await client.indices.refresh();
     } catch(err) { console.log(err); }
 }
@@ -166,5 +159,23 @@ function mapProducts(arr) {
     return arr.map((product) => product._source ?? product);
 }
 
+async function checkIfProductIsStored(articleNumber, index) {
+    let result;
+    isStored = false;
+    try {
+        result = await client.search({
+            index,
+            query: {
+                match: {
+                    "articleNumber": {
+                        query: articleNumber,
+                    }
+                }
+            }
+        });
+    } catch(err) { console.log(err); }
+    if(result.hits.hits.length !== 0) isStored = true;
+    return isStored;
+}
 
 module.exports = router;

@@ -79,7 +79,6 @@ router.post('/login', async (req, res) => {
     console.log()
     const email = req.body.email;
     const password = req.body.password;
-
     const foundUser = await User.findOne({email});
     if(!foundUser) {
         if(language === 'de-AT') {
@@ -90,8 +89,13 @@ router.post('/login', async (req, res) => {
     }
 
     const validPassword = await bcrypt.compare(password, foundUser.password);
-    if(!validPassword && language === 'en-US') return res.status(401).json({ message: 'Email or password is wrong!' });
-    if(!validPassword && language === 'de-AT') return res.status(401).json({ message: 'Email Adresse oder Passwort ist falsch!' });
+    if(!validPassword) {
+        if(language === 'en-US') {
+            return res.status(401).json({ message: 'Email or password is wrong.' });
+        } else {
+            return res.status(404).json({ message: 'Email Adresse oder Passwort ist falsch.' });
+        }
+    }
 
     foundUser.last_login = Date.now();
     try {
@@ -138,18 +142,17 @@ router.post('/addProduct', checkJWT, async (req, res) => {
 
 
 router.delete('/:productId', checkJWT, async (req, res) => {
-    const productId = req.params.productId;
-    if(!productId) return res.status(404).json({ message: 'Product not found.' });
-
+    const articleNumber = req.params.productId;
+    if(!articleNumber) return res.status(404).json({ message: 'Product not found.' });
     const findUser = await User.findById(req.user.id);
     if(!findUser) return res.status(404).json({ message: 'User not found.' });
 
     let inList = false;
     findUser.wishlist.forEach((el, index) => {
         findUser.notifyProducts.forEach((product, i) => {
-            if(product._id == productId) findUser.notifyProducts.splice(i, 1);
+            if(product.articleNumber == articleNumber) findUser.notifyProducts.splice(i, 1);
         });
-        if(el._id == productId) {
+        if(el.articleNumber == articleNumber) {
             findUser.wishlist.splice(index, 1);
             inList = true;
         }
