@@ -105,8 +105,79 @@ router.post('/login', async (req, res) => {
     }
 
 
-    const token = jwt.sign({id: foundUser._id, name: foundUser.email}, process.env.SECRET, { expiresIn: '2h' });
-    res.json({token, expiresIn: 7200, userId: foundUser._id});
+    const token = jwt.sign({id: foundUser._id}, process.env.SECRET, { expiresIn: '2h' });
+    res.json({token, expiresIn: 7200, userId: foundUser._id, email: foundUser.email});
+});
+
+
+router.post('/changeEmail', checkJWT, async (req, res) => {
+    const foundUser = await User.findById(req.user.id);
+    const newEmail = req.body.email;
+    const language = req.header('Accept-Language');
+
+    if(!foundUser) return res.status(404).json({ message: 'User not found.' });
+    if(!newEmail) return res.status(404).json({ message: 'No email has been sent.' });
+
+    if(newEmail === foundUser.email) {
+        if(language === 'de-AT') {
+            return res.status(404).json({ message: 'Diese Email ist genau dieselbe wie die Alte.' });
+        } else {
+            return res.status(404).json({ message: 'This email is the same as the old one.' });
+        }
+    }
+
+    const foundNewEmail = await User.findOne({ email: newEmail });
+    if(foundNewEmail) {
+        if(language === 'de-AT') {
+            return res.status(404).json({ message: 'Diese Email wird bereits verwendet.' });
+        } else {
+            return res.status(404).json({ message: 'This email is already being used.' });
+        }
+    }
+
+    foundUser.email = newEmail;
+
+    try {
+        await foundUser.save();
+    } catch (err) { console.log(err); }
+
+    res.json({ message: 'Email has been changed' });
+});
+
+
+router.post('/changePassword', checkJWT, async (req, res) => {
+    const foundUser = await User.findById(req.user.id);
+    const newPassword = req.body.password;
+    const language = req.header('Accept-Language');
+
+    if(newPassword.length < 8) {
+        if(language === 'de-At') {
+            return res.status(404).json({ message: 'Das Passwort muss aus mindestens 8 Zeichen bestehen.' });
+        } else {
+            return res.status(404).json({ message: 'The password must be at least 8 characters long.' });
+        }
+    }
+    if(!newPassword) return res.status(404).json({ message: 'No password has been sent.' });
+
+    const validPassword = await bcrypt.compare(newPassword, foundUser.password);
+    if(validPassword) {
+        if(language === 'de-AT') {
+            return res.status(404).json({ message: 'Das neue Passwort darf mit dem Alten nicht übereinstimmen.' });
+        } else {
+            return res.status(404).json({ message: 'The new password may not be the same like the old password.' });
+        }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    foundUser.password = hashedPassword;
+
+    try {
+        await foundUser.save();
+    } catch (err) { console.log(err); }
+
+    res.json({ message: 'Password has been changed' });
 });
 
 
