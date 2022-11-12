@@ -90,10 +90,10 @@ router.post('/login', async (req, res) => {
 
     const validPassword = await bcrypt.compare(password, foundUser.password);
     if(!validPassword) {
-        if(language === 'en-US') {
-            return res.status(401).json({ message: 'Email or password is wrong.' });
+        if(language === 'de-AT') {
+            return res.status(401).json({ message: 'Email Adresse oder Passwort ist falsch.' });
         } else {
-            return res.status(404).json({ message: 'Email Adresse oder Passwort ist falsch.' });
+            return res.status(404).json({ message: 'Email or password is wrong.' });
         }
     }
 
