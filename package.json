@@ -21,6 +21,7 @@
     "joi": "^17.6.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.4.4",
+    "netlify-lambda": "^2.0.15",
     "node-cron": "^3.0.1",
     "node-fetch": "^2.6.7",
     "nodemon": "^2.0.15",
@@ -28,6 +29,7 @@
     "promise": "^8.1.0",
     "puppeteer": "^13.5.1",
     "request": "^2.88.2",
+    "serverless-http": "^3.1.0",
     "web-push": "^3.5.0"
   }
 }
