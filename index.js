@@ -33,5 +33,3 @@ app.listen(port, () => {
 cron.schedule('0 8,12,16,20,22 * * *', () => {
   cronjob();
 });
-
-module.exports.handler = serverless(app);
