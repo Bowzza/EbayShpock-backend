@@ -15,7 +15,7 @@ const searchRoute = require('./routes/searchRoute');
 const notifyRoute = require('./routes/notifyRoute');
 const auth = require('./middleware/auth');
 
-app.use(auth);
+//app.use(auth);
 app.use('/api/users', userRoute);
 app.use('/api/search', searchRoute);
 app.use('/api/notify', notifyRoute);
@@ -24,7 +24,7 @@ mongoose.connect(process.env.MONGODB_URL, () => {
   console.log('Connected to mongodb');
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 app.listen(port, () => {
   console.log('Server listens in port '+port);
